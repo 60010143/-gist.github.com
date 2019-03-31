@@ -4,6 +4,54 @@ var port = 8000;
 var guestId = 0;
 
 
+
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var  fs = require('fs')
+var  dataTime = []
+
+var file = fs.readFileSync('time.json')
+	var time = JSON.parse(file)
+
+app.get('/', (req, res) => {
+	res.send('Hello World')
+	res.sendFile(__dirname + '/index.html');
+	
+	
+	console.log (time[0].dataTime)
+	dataTime = time[0].dataTime
+	res.send(200)
+})
+const time = require('./time')
+
+app.get('/time', (req, res) => {
+	res.json(time)
+	
+})
+
+io.on('connection', function(socket){
+	socket.on('SEND_MESSAGE', function(msg){
+
+	});
+	function tick(){
+		
+			var d = new Date()
+			var x = 0
+			var h = d.getHours()
+			var m = d.getMinutes()
+			var x = (h*60)+m
+			console.log(x)
+			io.emit('MESSAGE',dataTime[parseInt(x)%dataTime.length]);
+	}
+	setInterval(tick, 30000);
+});
+
+http.listen(8888, function(){
+  console.log('listening on web application *:8888');
+});
+
+
 var server = net.createServer(function(socket) {
 	// Increment
 	guestId++;
@@ -19,12 +67,31 @@ var server = net.createServer(function(socket) {
 	// When client sends data
     
         socket.on('data', function(data) {
-		var input = data.toString()
+				var d1 = new Date()
+				var x1 = 0
+				var h1 = d1.getHours()
+				var m1 = d1.getMinutes()
+				var x1 = (h1*60)+m1
+				var senddata = parseInt(dataTime[parseInt(x1)])
+				var input = senddata.toString()
         var message = clientName + '  accept require > ' + input ;
-        broadcast(clientName, message);
+				if (data.includes("update"))
+				{
+					var vlist = data.toString().split(" ")
+					seth = parseInt(vlist[1]) 
+					setm = parseInt(vlist[2])
+					newdata = parseInt(vlist[3])
+
+					var setx = (seth*60)+setm
+					dataTime[setx] = newdata
+					console.log(vlist)
+					console.log(dataTime[setx])
+					console.log(dataTime)
+				}
+				broadcast(clientName, message);
 		// Log it to the server output
 		process.stdout.write(message);
-	});
+	}); 
 	// When client leaves
 	socket.on('end', function() {
 		var message = clientName + ' left this chat\n';
